@@ -48,7 +48,7 @@ vgw_id = ec2module.create_vgw()
 
 ec2module.attach_vgw(vgw_id)
 
-#Creating CGW and storing CGW
+#Creating CGW and storing CGW ID
 
 cgw_id = ec2module.create_cgw()
 
