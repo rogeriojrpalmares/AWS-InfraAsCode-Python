@@ -55,4 +55,3 @@ cgw_id = ec2module.create_cgw()
 #Creating Site to Site connection
 
 ec2module.create_s2s(cgw_id, vgw_id)
-
