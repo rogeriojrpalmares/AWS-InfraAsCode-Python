@@ -227,4 +227,3 @@ def create_s2s(cgw_id, vgw_id):
         print(e)
     else:
         print("Site to site connection " + s2s_conn['VpnConnection']['VpnConnectionId'] + ' created successfully')
-
