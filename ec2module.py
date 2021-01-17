@@ -1,8 +1,30 @@
 import boto3
 import sys
+
 ec2 = boto3.resource('ec2')
 client = boto3.client('ec2')
 
+def describe_vpc ():
+    print('Available VPCs: ')
+    for vpcid in client.describe_vpcs()['Vpcs']:
+        print (vpcid['VpcId'])
+        for i in vpcid['Tags']:
+            print('VPC Name: ', i['Value'])
+
+def describe_sg (vpc):
+
+    print('Available Security Groups: ')
+    for sgid in client.describe_security_groups()['SecurityGroups']:
+        if sgid['VpcId'] == vpc:
+            print(sgid['GroupId'] + " - Name: " + sgid['GroupName'] + " - VPC ID: " + sgid['VpcId'])
+
+def describe_subnets (vpc):
+    print('Available Subnets: \n')
+    for subnets in client.describe_subnets()['Subnets']:
+        if vpc == subnets['VpcId']:
+            print(subnets['SubnetId'] + ', CIDR: ' + subnets['CidrBlock'] + ' ,VPC: ' + subnets['VpcId'] + ', Availability Zone: ' + subnets['AvailabilityZoneId'])
+            for i in subnets['Tags']:
+                print('Subnet Name: ', i['Value'])
 
 def create_instance(ami,
                     subnet,
@@ -34,7 +56,7 @@ def create_instance(ami,
                     'ResourceType': 'instance',
                     'Tags': [
                         {
-                            'Key': 'name',
+                            'Key': 'Name',
                             'Value':  name
                         },
                     ]
@@ -59,22 +81,22 @@ def create_instance(ami,
         return instance[0].id
 
 
-def create_second_int(sg ='sg-039633e9f88c85cc0', subnet='subnet-02ba323e080af18f3'):
+def create_second_int(sg, priv_sub):
     try:
         print("Creating the second network interface")
         secondary_interface = client.create_network_interface(
             Groups=[
                 sg
             ],
-            SubnetId=subnet
+            SubnetId=priv_sub
         )
 
     except Exception:
         print("An error occurred, when creating the interface!")
+        sys.exit(1)
 
     else:
         return secondary_interface['NetworkInterface']['NetworkInterfaceId']
-
 
 def attach_interface(instanceid, interfaceid):
     try:
@@ -85,7 +107,8 @@ def attach_interface(instanceid, interfaceid):
         )
     except Exception:
 
-        print("Error occurred when you tried to attach the interface")
+        print("Error occurred when you tried to attach the interface, closing the program")
+        sys.exit(1)
 
     else:
         print("Secondary interface {} was attached".format(interfaceid))
@@ -139,11 +162,11 @@ def create_vgw ():
         sys.exit(1)
 
     else:
-        print("Customer Gateway {} created successfully".format(vpn_gateway['VpnGateway']['VpnGatewayId']))
+        print("Virtual Private Gateway {} created successfully".format(vpn_gateway['VpnGateway']['VpnGatewayId']))
         return vpn_gateway['VpnGateway']['VpnGatewayId']
 
 
-def attach_vgw(gateway_id, vpc ='vpc-0d68dc2c2d1db7cf0'):
+def attach_vgw(gateway_id, vpc):
     try:
         client.attach_vpn_gateway(
             VpcId=vpc,
@@ -187,18 +210,13 @@ def create_s2s(cgw_id, vgw_id):
                 'EnableAcceleration': False,
                 'StaticRoutesOnly': False,
                 'TunnelInsideIpVersion': 'ipv4',
-                'TunnelOptions': [
-                    {
-                        'PreSharedKey': 'labpassword'
-                    }
-                ],
             },
             TagSpecifications=[
                 {
                     'ResourceType': 'vpn-connection',
                     'Tags': [
                         {
-                            'Key': 'name',
+                            'Key': 'Name',
                             'Value': 'S2SStrongSwan'
                         },
                     ]
@@ -208,4 +226,5 @@ def create_s2s(cgw_id, vgw_id):
     except Exception as e:
         print(e)
     else:
-        print("Site to site connection created successfully")
+        print("Site to site connection " + s2s_conn['VpnConnection']['VpnConnectionId'] + ' created successfully')
+
