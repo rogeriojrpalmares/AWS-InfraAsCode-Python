@@ -8,7 +8,7 @@ print("The default region used is eu-west-1 (DUB), please alter the document ~/.
 #Describes all VPCs
 
 ec2module.describe_vpc()
-vpc = input('Type the VPC ID: ')
+vpc = input('Type the VPC ID, please: ')
 
 #Describes all Subnets Ids
 
