@@ -4,7 +4,7 @@ import ec2module
 ec2 = boto3.resource('ec2')
 client = boto3.client('ec2')
 
-print("The default region used is eu-west-1 (DUB), please alter the document ~/.aws/config to change the region \n")
+print("The default region used is eu-west-1 (DUB), please alter the document ~/.aws/config to change the region! \n")
 #Describes all VPCs
 
 ec2module.describe_vpc()
